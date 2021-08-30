@@ -35,7 +35,7 @@ class FirebaseApi {
   Future<RemoteMessage?> get getInitialMessage => FirebaseMessaging.instance.getInitialMessage();
 
   Future<String?> getToken() async {
-    if (Platform.isIOS) _iOSPermission();
+    if (Platform.isIOS) await _iOSPermission();
     return await FirebaseMessaging.instance.getToken();
   }
 
