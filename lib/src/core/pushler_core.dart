@@ -13,7 +13,7 @@ import 'exception/exception.dart';
 import 'models/model.dart';
 import 'network/network_client.dart';
 
-/// A PushlerCore.
+/// A Pushler Core.
 class PushlerCore {
   static PushlerCore? _instance;
 
@@ -32,27 +32,33 @@ class PushlerCore {
   late PublishSubject<NewNotification> _newNotificationSubject;
   late PublishSubject<NewNotification> _openedAppFromNotificationSubject;
 
-  /// private constructor
+  /// Private constructor.
   PushlerCore._();
 
-  /// Return singleton instance
+  /// Return singleton instance.
   factory PushlerCore() {
     _instance ??= PushlerCore._();
     return _instance!;
   }
 
-  /// Initialize package
-  /// Initialize FirebaseMessaging
+  /// Initialize package and FirebaseMessaging.
+  ///
+  /// [appVersion] - You can transfer the version of your application.
+  /// It is sent to the server for statistics.
+  /// Default value - [Option.defaultAppVersion]
+  ///
+  /// [baseUrl] - Sets a new base url for sending Pushler Api requests.
+  /// Default value - [Option.defaultBaseUrl]
   Future<void> initialize({String? appVersion, String? baseUrl}) async {
-    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     _appVersion = appVersion ?? Option.defaultAppVersion;
     _deviceSystem = Platform.operatingSystem;
     if (Platform.isAndroid) {
-      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
       _deviceName = androidInfo.model ?? Option.defaultDeviceName;
     }
     if (Platform.isIOS) {
-      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       _deviceName = iosInfo.utsname.machine ?? Option.defaultDeviceName;
     }
     _baseUrl = baseUrl ?? Option.defaultBaseUrl;
@@ -62,7 +68,7 @@ class PushlerCore {
     _openedAppFromNotificationSubject = PublishSubject();
 
     _sharedPreferences = await SharedPreferences.getInstance();
-    _flutterSecureStorage = FlutterSecureStorage();
+    _flutterSecureStorage = const FlutterSecureStorage();
     _firebaseApi = await FirebaseApi.getInstance(
       onMessage: _onMessageFirebase,
       onMessageOpenedApp: _onMessageOpenedAppFirebase,
@@ -75,85 +81,109 @@ class PushlerCore {
     );
   }
 
-  /// Request ios permission
-  /// Authorization
-  /// Send FCM token
+  /// Request ios permission.
+  ///
+  /// Authorization.
+  ///
+  /// Send FCM token.
+  ///
+  /// Throw: [AuthError], [FcmError].
   Future<void> auth() async {
-    bool isAuth = await _pushlerApi.auth(
+    final bool isAuth = await _pushlerApi.auth(
         deviceName: _deviceName,
         deviceSystem: _deviceSystem,
         appVersion: _appVersion);
 
     if (isAuth) {
-      String? fcmToken = await _firebaseApi.getToken();
+      final String? fcmToken = await _firebaseApi.getToken();
 
       if (fcmToken == null) {
-        throw FcmError("fcm token is null");
+        throw const FcmError("fcm token is null");
       }
 
-      print("fcm token $fcmToken");
-
-      bool isSendFcm = await _pushlerApi.sendFcmToken(token: fcmToken);
-      if (!isSendFcm) throw FcmError("Send fcm error");
+      final bool isSendFcm = await _pushlerApi.sendFcmToken(token: fcmToken);
+      if (!isSendFcm) throw const FcmError("Send fcm error");
     } else {
-      throw AuthError("Auth error");
+      throw const AuthError("Auth error");
     }
   }
 
-  /// Get data of subscribers and notification
-  Future<FetchData> getData() async {
-    return _pushlerApi.fetchData();
-  }
+  /// Get data of subscribers and notifications.
+  Future<FetchData> getData() async => _pushlerApi.fetchData();
 
-  /// Subscribe channel
-  Future<bool> subsribe(String tag, String channel) async {
-    return _pushlerApi.subscribe(tag: tag, channel: channel);
-  }
+  /// Subscribe channel.
+  ///
+  /// [tag] - subscriber tag.
+  ///
+  /// [channel] - channel id to subscribe.
+  ///
+  /// Returns true on success and false on failure.
+  Future<bool> subscribe(String tag, String channel) async =>
+      _pushlerApi.subscribe(tag: tag, channel: channel);
 
-  /// Unsubscribe channel
-  Future<bool> unsubsribe(String tag, String channel) async {
-    return _pushlerApi.unsubscribe(tag: tag, channel: channel);
-  }
+  /// Unsubscribe channel.
+  ///
+  /// [tag] - subscriber tag.
+  ///
+  /// [channel] - channel id to unsubscribe.
+  ///
+  /// Returns true on success and false on failure.
+  Future<bool> unsubscribe(String tag, String channel) async =>
+      _pushlerApi.unsubscribe(tag: tag, channel: channel);
 
-  /// Update notification
-  Future<bool> updateNotification(String notificationId, bool viewed) async {
-    return _pushlerApi.updateNotification(
-        notificationId: notificationId, viewed: viewed);
-  }
+  /// Update mark as read/unread for notification.
+  ///
+  /// [notificationId] - notification id to update.
+  ///
+  /// [viewed] - read/unread notification.
+  ///
+  /// Returns true on success and false on failure.
+  Future<bool> updateNotification(String notificationId, bool viewed) async =>
+      _pushlerApi.updateNotification(
+          notificationId: notificationId, viewed: viewed);
 
-  /// Delete notification
-  Future<bool> deleteNotification(String notificationId) async {
-    return _pushlerApi.deleteNotification(notificationId: notificationId);
-  }
+  /// Delete notification.
+  ///
+  /// [notificationId] - notification id to delete.
+  ///
+  /// Returns true on success and false on failure.
+  Future<bool> deleteNotification(String notificationId) async =>
+      _pushlerApi.deleteNotification(notificationId: notificationId);
 
-  /// Get initial message
+  /// Get initial message.
+  ///
+  /// Returns the initial message with the NewNotification cast or null.
   Future<NewNotification?> getInitialMessage() async {
-    RemoteMessage? message = await _firebaseApi.getInitialMessage;
+    final RemoteMessage? message = await _firebaseApi.getInitialMessage;
     return message?.data != null
         ? NewNotification.fromJson(message!.data)
         : null;
   }
 
-  /// Set default base url
-  /// Delete token
+  /// Set default base url.
+  ///
+  /// Delete token.
   Future<void> reset() async {
     _networkClient.setBaseUrl(_baseUrl);
     await _pushlerApi.deleteToken();
   }
 
-  /// Set base url
-  /// Delete token
+  /// Set base url.
+  ///
+  /// Delete token.
+  ///
+  /// [url] - string of base url.
   Future<void> setBaseUrl(String url) async {
     _networkClient.setBaseUrl(url);
     await _pushlerApi.deleteToken();
   }
 
-  /// Watch current base url
-  Stream<String> watchBaseUrl() {
-    return _networkClient.streamBaseUrl;
-  }
+  /// Watch current base url.
+  ///
+  /// Returns stream of string.
+  Stream<String> watchBaseUrl() => _networkClient.streamBaseUrl;
 
-  /// Set handler firebase onMessage
+  /// Set handler Firebase messaging onMessage.
   void setOnMessage(
     void Function(RemoteMessage)? onData, {
     Function? onError,
@@ -167,7 +197,7 @@ class PushlerCore {
         onDone: onDone);
   }
 
-  /// Set handler firebase onMessageOpenedApp
+  /// Set handler Firebase messaging onMessageOpenedApp.
   void setOnMessageOpenedApp(
     void Function(RemoteMessage)? onData, {
     Function? onError,
@@ -181,21 +211,27 @@ class PushlerCore {
         onDone: onDone);
   }
 
-  /// Set handler firebase onBackgroundMessage
+  /// Set handler Firebase messaging onBackgroundMessage.
   void setOnBackgroundMessage({
     required Future<void> Function(RemoteMessage) handler,
   }) {
     _firebaseApi.setOnBackgroundMessage(handler: handler);
   }
 
-  /// Watch new invite push notification
+  /// Watch new invite push notification.
+  ///
+  /// Returns stream of [Invite].
   Stream<Invite> watchInvite() => _inviteSubject.stream;
 
-  /// Watch new push notification without invite
+  /// Watch new push notification without invite.
+  ///
+  /// Returns stream of [NewNotification].
   Stream<NewNotification> watchNewNotification() =>
       _newNotificationSubject.stream;
 
-  /// Watch opened app from notification
+  /// Watch opened app from notification.
+  ///
+  /// Returns stream of [NewNotification].
   Stream<NewNotification> watchOpenedAppFromNotification() =>
       _openedAppFromNotificationSubject.stream;
 
@@ -209,15 +245,8 @@ class PushlerCore {
   }
 
   void _onMessageFirebase(RemoteMessage message) {
-    print('Got a message whilst in the foreground!');
-    print('Message data: ${message.data}');
-
-    if (message.notification != null) {
-      print('Message also contained a notification: ${message.notification}');
-    }
-
     if (message.data.isNotEmpty && message.data.containsKey("action")) {
-      DataNotification dataNotification =
+      final DataNotification dataNotification =
           DataNotification.fromJson(message.data);
       if (dataNotification.action == "invite" &&
           dataNotification.channelName != null &&
@@ -237,7 +266,6 @@ class PushlerCore {
   }
 
   void _onMessageOpenedAppFirebase(RemoteMessage message) {
-    print("_onMessageOpenedAppFirebase ${message.data}");
     _openedAppFromNotificationSubject
         .add(NewNotification.fromJson(message.data));
   }

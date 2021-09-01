@@ -18,7 +18,8 @@ class Subscription {
     required this.createAt,
   });
 
-  factory Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
+  factory Subscription.fromJson(Map<String, dynamic> json) =>
+      _$SubscriptionFromJson(json);
 
   Map<String, dynamic> toJson() => _$SubscriptionToJson(this);
 }

@@ -18,7 +18,8 @@ class NewNotification {
     this.createAt,
   });
 
-  factory NewNotification.fromJson(Map<String, dynamic> json) => _$NewNotificationFromJson(json);
+  factory NewNotification.fromJson(Map<String, dynamic> json) =>
+      _$NewNotificationFromJson(json);
 
   Map<String, dynamic> toJson() => _$NewNotificationToJson(this);
 }

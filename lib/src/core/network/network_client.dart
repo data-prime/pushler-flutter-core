@@ -3,10 +3,10 @@ import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NetworkClient {
-  static const Map<String, dynamic> _DEFAULT_HEADERS = {
+  static const Map<String, dynamic> defaultHeaders = {
     "Content-Type": "application/x-www-form-urlencoded"
   };
-  static const String _BASE_URL_KEY = "base_url";
+  static const String baseUrlKey = "base_url";
 
   final SharedPreferences _sharedPreferences;
   final Dio _dio = Dio();
@@ -16,8 +16,8 @@ class NetworkClient {
   NetworkClient({
     required SharedPreferences sharedPreferences,
     required String url,
-  }) : this._sharedPreferences = sharedPreferences {
-    _dio.interceptors.add(LogInterceptor(responseBody: true));
+  }) : _sharedPreferences = sharedPreferences {
+    _dio.interceptors.add(LogInterceptor());
     _initBaseUrl(url);
   }
 
@@ -29,7 +29,7 @@ class NetworkClient {
 
   void setBaseUrl(String url) {
     _baseUrlSubject.add(url);
-    _sharedPreferences.setString(_BASE_URL_KEY, url);
+    _sharedPreferences.setString(baseUrlKey, url);
   }
 
   Future<Response> getRequest(
@@ -39,9 +39,9 @@ class NetworkClient {
     CancelToken? cancelToken,
     void Function(int, int)? onReceiveProgress,
   }) async {
-    Options options = Options(
+    final Options options = Options(
       headers: {
-        ..._DEFAULT_HEADERS,
+        ...defaultHeaders,
         if (_tokenSubject.value.trim() != "")
           "Authorization": "Bearer ${_tokenSubject.value}",
         if (headers != null) ...headers,
@@ -66,9 +66,9 @@ class NetworkClient {
     void Function(int, int)? onSendProgress,
     void Function(int, int)? onReceiveProgress,
   }) async {
-    Options options = Options(
+    final Options options = Options(
       headers: {
-        ..._DEFAULT_HEADERS,
+        ...defaultHeaders,
         if (_tokenSubject.value.trim() != "")
           "Authorization": "Bearer ${_tokenSubject.value}",
         if (headers != null) ...headers,
@@ -95,9 +95,9 @@ class NetworkClient {
     void Function(int, int)? onSendProgress,
     void Function(int, int)? onReceiveProgress,
   }) async {
-    Options options = Options(
+    final Options options = Options(
       headers: {
-        ..._DEFAULT_HEADERS,
+        ...defaultHeaders,
         if (_tokenSubject.value.trim() != "")
           "Authorization": "Bearer ${_tokenSubject.value}",
         if (headers != null) ...headers,
@@ -122,9 +122,9 @@ class NetworkClient {
     Map<String, dynamic>? headers,
     CancelToken? cancelToken,
   }) async {
-    Options options = Options(
+    final Options options = Options(
       headers: {
-        ..._DEFAULT_HEADERS,
+        ...defaultHeaders,
         if (_tokenSubject.value.trim() != "")
           "Authorization": "Bearer ${_tokenSubject.value}",
         if (headers != null) ...headers,
@@ -146,11 +146,11 @@ class NetworkClient {
   }
 
   void _initBaseUrl(String url) {
-    if (_sharedPreferences.containsKey(_BASE_URL_KEY)) {
-      _baseUrlSubject.add(_sharedPreferences.getString(_BASE_URL_KEY)!);
+    if (_sharedPreferences.containsKey(baseUrlKey)) {
+      _baseUrlSubject.add(_sharedPreferences.getString(baseUrlKey)!);
     } else {
       _baseUrlSubject.add(url);
-      _sharedPreferences.setString(_BASE_URL_KEY, url);
+      _sharedPreferences.setString(baseUrlKey, url);
     }
   }
 }

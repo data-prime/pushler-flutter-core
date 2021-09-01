@@ -3,19 +3,19 @@ import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:pushler_core/src/core/exception/exception.dart';
+import '../exception/exception.dart';
 
 class FirebaseApi {
   StreamSubscription? _onMessageSubscription;
   StreamSubscription? _onMessageOpenedAppSubscription;
-  void Function(RemoteMessage)? _onMessage;
-  void Function(RemoteMessage)? _onMessageOpenedApp;
+  final void Function(RemoteMessage)? _onMessage;
+  final void Function(RemoteMessage)? _onMessageOpenedApp;
 
   FirebaseApi._({
     Function(RemoteMessage)? onMessage,
     Function(RemoteMessage)? onMessageOpenedApp,
-  })  : this._onMessage = onMessage,
-        this._onMessageOpenedApp = onMessageOpenedApp {
+  })  : _onMessage = onMessage,
+        _onMessageOpenedApp = onMessageOpenedApp {
     setOnMessage();
     setOnMessageOpenedApp();
   }
@@ -32,7 +32,8 @@ class FirebaseApi {
     );
   }
 
-  Future<RemoteMessage?> get getInitialMessage => FirebaseMessaging.instance.getInitialMessage();
+  Future<RemoteMessage?> get getInitialMessage =>
+      FirebaseMessaging.instance.getInitialMessage();
 
   Future<String?> getToken() async {
     if (Platform.isIOS) await _iOSPermission();
@@ -79,15 +80,16 @@ class FirebaseApi {
   }
 
   Future<void> _iOSPermission() async {
-    NotificationSettings settings =
+    final NotificationSettings settings =
         await FirebaseMessaging.instance.getNotificationSettings();
     if (settings.authorizationStatus != AuthorizationStatus.authorized &&
         settings.authorizationStatus != AuthorizationStatus.provisional) {
-      NotificationSettings settings =
+      final NotificationSettings settings =
           await FirebaseMessaging.instance.requestPermission();
       if (settings.authorizationStatus != AuthorizationStatus.authorized &&
           settings.authorizationStatus != AuthorizationStatus.provisional) {
-        throw PermissionError('User declined or has not accepted permission');
+        throw const PermissionError(
+            'User declined or has not accepted permission');
       }
     }
   }

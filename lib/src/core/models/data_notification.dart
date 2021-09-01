@@ -18,7 +18,8 @@ class DataNotification {
     this.target,
   });
 
-  factory DataNotification.fromJson(Map<String, dynamic> json) => _$DataNotificationFromJson(json);
+  factory DataNotification.fromJson(Map<String, dynamic> json) =>
+      _$DataNotificationFromJson(json);
 
   Map<String, dynamic> toJson() => _$DataNotificationToJson(this);
 }

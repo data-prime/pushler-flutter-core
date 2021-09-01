@@ -19,7 +19,8 @@ class FetchData {
     required this.uuid,
   });
 
-  factory FetchData.fromJson(Map<String, dynamic> json) => _$FetchDataFromJson(json);
+  factory FetchData.fromJson(Map<String, dynamic> json) =>
+      _$FetchDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$FetchDataToJson(this);
 }
