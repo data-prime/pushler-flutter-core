@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import '../exception/exception.dart';
 
 class FirebaseApi {
   StreamSubscription? _onMessageSubscription;
@@ -24,8 +21,6 @@ class FirebaseApi {
     Function(RemoteMessage)? onMessage,
     Function(RemoteMessage)? onMessageOpenedApp,
   }) async {
-    await Firebase.initializeApp();
-    FirebaseMessaging.instance;
     return FirebaseApi._(
       onMessage: onMessage,
       onMessageOpenedApp: onMessageOpenedApp,
@@ -35,10 +30,8 @@ class FirebaseApi {
   Future<RemoteMessage?> get getInitialMessage =>
       FirebaseMessaging.instance.getInitialMessage();
 
-  Future<String?> getToken() async {
-    if (Platform.isIOS) await _iOSPermission();
-    return await FirebaseMessaging.instance.getToken();
-  }
+  Future<String?> getToken() async =>
+      await FirebaseMessaging.instance.getToken();
 
   void setOnMessage({
     void Function(RemoteMessage)? onData,
@@ -77,20 +70,5 @@ class FirebaseApi {
   void dispose() {
     _onMessageSubscription?.cancel();
     _onMessageOpenedAppSubscription?.cancel();
-  }
-
-  Future<void> _iOSPermission() async {
-    final NotificationSettings settings =
-        await FirebaseMessaging.instance.getNotificationSettings();
-    if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-        settings.authorizationStatus != AuthorizationStatus.provisional) {
-      final NotificationSettings settings =
-          await FirebaseMessaging.instance.requestPermission();
-      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) {
-        throw const PermissionError(
-            'User declined or has not accepted permission');
-      }
-    }
   }
 }
