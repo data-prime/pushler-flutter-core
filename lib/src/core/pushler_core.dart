@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -277,15 +278,16 @@ class PushlerCore {
 
   Future<void> _iOSPermission() async {
     final NotificationSettings settings =
-    await FirebaseMessaging.instance.getNotificationSettings();
+        await FirebaseMessaging.instance.getNotificationSettings();
     if (settings.authorizationStatus != AuthorizationStatus.authorized &&
         settings.authorizationStatus != AuthorizationStatus.provisional) {
       final NotificationSettings settings =
-      await FirebaseMessaging.instance.requestPermission();
+          await FirebaseMessaging.instance.requestPermission();
       if (settings.authorizationStatus != AuthorizationStatus.authorized &&
           settings.authorizationStatus != AuthorizationStatus.provisional) {
-        throw const PermissionError(
-            'User declined or has not accepted permission');
+        log(const PermissionError(
+                'User declined or has not accepted permission')
+            .toString());
       }
     }
   }
