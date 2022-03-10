@@ -5,7 +5,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../option.dart';
@@ -29,10 +28,6 @@ class PushlerCore {
   late NetworkClient _networkClient;
   late PushlerApi _pushlerApi;
   late FirebaseApi _firebaseApi;
-
-  late PublishSubject<Invite> _inviteSubject;
-  late PublishSubject<NewNotification> _newNotificationSubject;
-  late PublishSubject<NewNotification> _openedAppFromNotificationSubject;
 
   /// Private constructor.
   PushlerCore._();
@@ -69,16 +64,9 @@ class PushlerCore {
     }
     _baseUrl = baseUrl ?? Option.defaultBaseUrl;
 
-    _inviteSubject = PublishSubject();
-    _newNotificationSubject = PublishSubject();
-    _openedAppFromNotificationSubject = PublishSubject();
-
     _sharedPreferences = await SharedPreferences.getInstance();
     _flutterSecureStorage = const FlutterSecureStorage();
-    _firebaseApi = await FirebaseApi.getInstance(
-      onMessage: _onMessageFirebase,
-      onMessageOpenedApp: _onMessageOpenedAppFirebase,
-    );
+    _firebaseApi = await FirebaseApi.getInstance();
     _networkClient =
         NetworkClient(sharedPreferences: _sharedPreferences, url: _baseUrl);
     _pushlerApi = PushlerApi(
@@ -159,12 +147,7 @@ class PushlerCore {
   /// Get initial message.
   ///
   /// Returns the initial message with the NewNotification cast or null.
-  Future<NewNotification?> getInitialMessage() async {
-    final RemoteMessage? message = await _firebaseApi.getInitialMessage;
-    return message?.data != null
-        ? NewNotification.fromJson(message!.data)
-        : null;
-  }
+  Future<RemoteMessage?> getInitialMessage() => _firebaseApi.getInitialMessage;
 
   /// Set default base url.
   ///
@@ -197,10 +180,11 @@ class PushlerCore {
     bool? cancelOnError,
   }) {
     _firebaseApi.setOnMessage(
-        onData: onData,
-        onError: onError,
-        cancelOnError: cancelOnError,
-        onDone: onDone);
+      onData: onData,
+      onError: onError,
+      cancelOnError: cancelOnError,
+      onDone: onDone,
+    );
   }
 
   /// Set handler Firebase messaging onMessageOpenedApp.
@@ -211,10 +195,11 @@ class PushlerCore {
     bool? cancelOnError,
   }) {
     _firebaseApi.setOnMessageOpenedApp(
-        onData: onData,
-        onError: onError,
-        cancelOnError: cancelOnError,
-        onDone: onDone);
+      onData: onData,
+      onError: onError,
+      cancelOnError: cancelOnError,
+      onDone: onDone,
+    );
   }
 
   /// Set handler Firebase messaging onBackgroundMessage.
@@ -224,56 +209,10 @@ class PushlerCore {
     _firebaseApi.setOnBackgroundMessage(handler: handler);
   }
 
-  /// Watch new invite push notification.
-  ///
-  /// Returns stream of [Invite].
-  Stream<Invite> watchInvite() => _inviteSubject.stream;
-
-  /// Watch new push notification without invite.
-  ///
-  /// Returns stream of [NewNotification].
-  Stream<NewNotification> watchNewNotification() =>
-      _newNotificationSubject.stream;
-
-  /// Watch opened app from notification.
-  ///
-  /// Returns stream of [NewNotification].
-  Stream<NewNotification> watchOpenedAppFromNotification() =>
-      _openedAppFromNotificationSubject.stream;
-
   /// Call this method to dispose this object.
   void dispose() {
     _networkClient.dispose();
     _firebaseApi.dispose();
-    _inviteSubject.close();
-    _newNotificationSubject.close();
-    _openedAppFromNotificationSubject.close();
-  }
-
-  void _onMessageFirebase(RemoteMessage message) {
-    if (message.data.isNotEmpty && message.data.containsKey("action")) {
-      final DataNotification dataNotification =
-          DataNotification.fromJson(message.data);
-      if (dataNotification.action == "invite" &&
-          dataNotification.channelName != null &&
-          dataNotification.channel != null &&
-          dataNotification.target != null) {
-        _inviteSubject.add(
-          Invite(
-            channel: dataNotification.channel!,
-            target: dataNotification.target!,
-            channelName: dataNotification.channelName!,
-          ),
-        );
-      } else {
-        _newNotificationSubject.add(NewNotification.fromJson(message.data));
-      }
-    }
-  }
-
-  void _onMessageOpenedAppFirebase(RemoteMessage message) {
-    _openedAppFromNotificationSubject
-        .add(NewNotification.fromJson(message.data));
   }
 
   Future<void> _iOSPermission() async {

@@ -5,26 +5,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 class FirebaseApi {
   StreamSubscription? _onMessageSubscription;
   StreamSubscription? _onMessageOpenedAppSubscription;
-  final void Function(RemoteMessage)? _onMessage;
-  final void Function(RemoteMessage)? _onMessageOpenedApp;
 
-  FirebaseApi._({
-    Function(RemoteMessage)? onMessage,
-    Function(RemoteMessage)? onMessageOpenedApp,
-  })  : _onMessage = onMessage,
-        _onMessageOpenedApp = onMessageOpenedApp {
-    setOnMessage();
-    setOnMessageOpenedApp();
-  }
+  FirebaseApi._();
 
-  static Future<FirebaseApi> getInstance({
-    Function(RemoteMessage)? onMessage,
-    Function(RemoteMessage)? onMessageOpenedApp,
-  }) async {
-    return FirebaseApi._(
-      onMessage: onMessage,
-      onMessageOpenedApp: onMessageOpenedApp,
-    );
+  static Future<FirebaseApi> getInstance() async {
+    return FirebaseApi._();
   }
 
   Future<RemoteMessage?> get getInitialMessage =>
@@ -40,11 +25,12 @@ class FirebaseApi {
     bool? cancelOnError,
   }) {
     _onMessageSubscription?.cancel();
-    _onMessageSubscription =
-        FirebaseMessaging.onMessage.listen((RemoteMessage remoteMessage) {
-      _onMessage?.call(remoteMessage);
-      onData?.call(remoteMessage);
-    }, onError: onError, cancelOnError: cancelOnError, onDone: onDone);
+    _onMessageSubscription = FirebaseMessaging.onMessage.listen(
+      onData,
+      onError: onError,
+      cancelOnError: cancelOnError,
+      onDone: onDone,
+    );
   }
 
   void setOnMessageOpenedApp({
@@ -54,11 +40,13 @@ class FirebaseApi {
     bool? cancelOnError,
   }) {
     _onMessageOpenedAppSubscription?.cancel();
-    _onMessageOpenedAppSubscription = FirebaseMessaging.onMessageOpenedApp
-        .listen((RemoteMessage remoteMessage) {
-      _onMessageOpenedApp?.call(remoteMessage);
-      onData?.call(remoteMessage);
-    }, onError: onError, cancelOnError: cancelOnError, onDone: onDone);
+    _onMessageOpenedAppSubscription =
+        FirebaseMessaging.onMessageOpenedApp.listen(
+      onData,
+      onError: onError,
+      cancelOnError: cancelOnError,
+      onDone: onDone,
+    );
   }
 
   void setOnBackgroundMessage({
