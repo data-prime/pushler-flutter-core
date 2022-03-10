@@ -1,29 +1,23 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'channel.freezed.dart';
 
 part 'channel.g.dart';
 
-@JsonSerializable()
-class Channel {
-  String id;
-  String name;
-  bool public;
-  String? pathURL;
-  String? imageURL;
-  DateTime createAt;
-  DateTime changeAt;
-
-  Channel({
-    required this.id,
-    required this.name,
-    required this.public,
-    required this.pathURL,
-    required this.imageURL,
-    required this.createAt,
-    required this.changeAt,
-  });
+@freezed
+class Channel with _$Channel {
+  const factory Channel({
+    @JsonKey(name: 'id') required String id,
+    @JsonKey(name: 'name') required String name,
+    @JsonKey(name: 'public') required bool public,
+    @JsonKey(name: 'pathURL') String? pathURL,
+    @JsonKey(name: 'imageURL') String? imageURL,
+    @JsonKey(name: 'createAt') required DateTime createAt,
+    @JsonKey(name: 'changeAt') required DateTime changeAt,
+  }) = _Channel;
 
   factory Channel.fromJson(Map<String, dynamic> json) =>
       _$ChannelFromJson(json);
 
-  Map<String, dynamic> toJson() => _$ChannelToJson(this);
+  const Channel._();
 }

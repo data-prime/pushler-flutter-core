@@ -1,34 +1,25 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pushler_core/src/core/models/model.dart';
 
-import 'channel.dart';
-import 'data_notification.dart';
+part 'notification.freezed.dart';
 
 part 'notification.g.dart';
 
-@JsonSerializable()
-class Notification {
-  String id;
-  Channel sender;
-  String recipient;
-  String title;
-  bool viewed;
-  String? body;
-  DataNotification? data;
-  DateTime createAt;
-
-  Notification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.recipient,
-    required this.createAt,
-    required this.data,
-    required this.sender,
-    required this.viewed,
-  });
+@freezed
+class Notification with _$Notification {
+  const factory Notification({
+    @JsonKey(name: 'id') required String id,
+    @JsonKey(name: 'sender') required Channel sender,
+    @JsonKey(name: 'recipient') required String recipient,
+    @JsonKey(name: 'title') required String title,
+    @JsonKey(name: 'viewed') required bool viewed,
+    @JsonKey(name: 'body') String? body,
+    @JsonKey(name: 'data') DataNotification? data,
+    @JsonKey(name: 'createAt') required DateTime createAt,
+  }) = _Notification;
 
   factory Notification.fromJson(Map<String, dynamic> json) =>
       _$NotificationFromJson(json);
 
-  Map<String, dynamic> toJson() => _$NotificationToJson(this);
+  const Notification._();
 }

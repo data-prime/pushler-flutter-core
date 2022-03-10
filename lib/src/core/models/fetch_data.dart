@@ -1,26 +1,21 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pushler_core/src/core/models/model.dart';
 
-import 'notification.dart';
-import 'subscription.dart';
+part 'fetch_data.freezed.dart';
 
 part 'fetch_data.g.dart';
 
-@JsonSerializable()
-class FetchData {
-  bool? result;
-  List<Subscription>? subscriptions;
-  List<Notification>? notifications;
-  String? uuid;
-
-  FetchData({
-    required this.result,
-    required this.subscriptions,
-    required this.notifications,
-    required this.uuid,
-  });
+@freezed
+class FetchData with _$FetchData {
+  const factory FetchData({
+    @JsonKey(name: 'result') bool? result,
+    @JsonKey(name: 'subscriptions') List<Subscription>? subscriptions,
+    @JsonKey(name: 'notifications') List<Notification>? notifications,
+    @JsonKey(name: 'uuid') String? uuid,
+  }) = _FetchData;
 
   factory FetchData.fromJson(Map<String, dynamic> json) =>
       _$FetchDataFromJson(json);
 
-  Map<String, dynamic> toJson() => _$FetchDataToJson(this);
+  const FetchData._();
 }

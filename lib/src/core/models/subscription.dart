@@ -1,25 +1,21 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pushler_core/src/core/models/model.dart';
 
-import 'channel.dart';
+part 'subscription.freezed.dart';
 
 part 'subscription.g.dart';
 
-@JsonSerializable()
-class Subscription {
-  int id;
-  Channel channel;
-  String tag;
-  DateTime createAt;
-
-  Subscription({
-    required this.id,
-    required this.channel,
-    required this.tag,
-    required this.createAt,
-  });
+@freezed
+class Subscription with _$Subscription {
+  const factory Subscription({
+    @JsonKey(name: 'id') required int id,
+    @JsonKey(name: 'channel') required Channel channel,
+    @JsonKey(name: 'tag') required String tag,
+    @JsonKey(name: 'createAt') required DateTime createAt,
+  }) = _Subscription;
 
   factory Subscription.fromJson(Map<String, dynamic> json) =>
       _$SubscriptionFromJson(json);
 
-  Map<String, dynamic> toJson() => _$SubscriptionToJson(this);
+  const Subscription._();
 }
