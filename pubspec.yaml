@@ -15,7 +15,7 @@ dependencies:
   rxdart: ^0.27.3
   flutter_secure_storage: ^5.0.2
   shared_preferences: ^2.0.13
-  firebase_core: ^1.13.1
+  firebase_core: ^1.4.0
   firebase_messaging: ^10.0.4
   json_annotation: ^4.4.0
   freezed: ^1.1.0
