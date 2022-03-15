@@ -48,7 +48,6 @@ class PushlerCore {
   /// Default value - [Option.defaultBaseUrl]
   Future<void> initialize({String? appVersion, String? baseUrl}) async {
     await Firebase.initializeApp();
-    FirebaseMessaging.instance;
     if (Platform.isIOS) await _iOSPermission();
 
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
